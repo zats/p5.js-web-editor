@@ -1817,6 +1817,16 @@ span.CodeMirror-selectedtext {
   display: flex;
   align-items: center; }
 
+.toolbar__ai-container {
+  margin-left: 0.83333rem;
+  padding-left: 0.83333rem;
+}
+
+.toolbar__api-key-container {
+  margin-left: 0.83333rem;
+  padding-left: 0.83333rem;
+}
+
 .toolbar__project-name-container {
   margin-left: 0.83333rem;
   padding-left: 0.83333rem;
@@ -2833,3 +2843,7 @@ span.CodeMirror-selectedtext {
   width: 100%;
   flex: 1 0 0%;
   position: relative; }
+
+ .toolbar__ai-input {
+  width: 3em;
+ }

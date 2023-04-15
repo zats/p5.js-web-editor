@@ -229,6 +229,8 @@ class Editor extends React.Component {
       if (!prevProps.unsavedChanges) {
         setTimeout(() => this.props.setUnsavedChanges(false), 400);
       }
+    } else if (this.props.file.content !== prevProps.file.content) {
+      this._cm.doc.setValue(this.props.file.content);
     }
     if (this.props.fontSize !== prevProps.fontSize) {
       this._cm.getWrapperElement().style[

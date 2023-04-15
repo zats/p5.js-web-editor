@@ -18,11 +18,15 @@ class Toolbar extends React.Component {
     super(props);
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.handleProjectNameChange = this.handleProjectNameChange.bind(this);
+    this.handleAPIKeyCommandChange = this.handleAPIKeyCommandChange.bind(this);
     this.handleProjectNameClick = this.handleProjectNameClick.bind(this);
     this.handleProjectNameSave = this.handleProjectNameSave.bind(this);
+    this.handleAPICommand = this.handleAPICommand.bind(this);
+    this.handleAPIKeyKeyPress = this.handleAPIKeyKeyPress.bind(this);
 
     this.state = {
-      projectNameInputValue: props.project.name
+      projectNameInputValue: props.project.name,
+      apiKey: props.apiKey
     };
   }
 
@@ -33,8 +37,18 @@ class Toolbar extends React.Component {
     }
   }
 
+  handleAPIKeyKeyPress(event) {
+    if (event.key === 'Enter') {
+      this.apiKeyCommandInput.blur();
+    }
+  }
+
   handleProjectNameChange(event) {
     this.setState({ projectNameInputValue: event.target.value });
+  }
+
+  handleAPIKeyCommandChange(event) {
+    this.setState({ apiKey: event.target.value });
   }
 
   handleProjectNameClick() {
@@ -61,6 +75,11 @@ class Toolbar extends React.Component {
     }
   }
 
+  handleAPICommand() {
+    this.props.onAPIKeyCommand(this.state.apiKey);
+    localStorage.setItem('APIKey', this.state.apiKey);
+  }
+
   canEditProjectName() {
     return (
       (this.props.owner &&
@@ -72,6 +91,12 @@ class Toolbar extends React.Component {
   }
 
   render() {
+    const apiKeyContainerClass = classNames({
+      'toolbar__api-key-container': true
+    });
+    const apiKeyInputClass = classNames({
+      'toolbar__api-key-input': true
+    });
     const playButtonClass = classNames({
       'toolbar__play-button': true,
       'toolbar__play-button--selected': this.props.isPlaying
@@ -182,6 +207,21 @@ class Toolbar extends React.Component {
             return null;
           })()}
         </div>
+        <div className={apiKeyContainerClass}>
+          <input
+            className={apiKeyInputClass}
+            type="text"
+            value={this.state.apiKey}
+            placeholder="API Key"
+            onChange={this.handleAPIKeyCommandChange}
+            ref={(element) => {
+              this.apiKeyCommandInput = element;
+            }}
+            onBlur={this.handleAPICommand}
+            onKeyPress={this.handleAPIKeyKeyPress}
+          />
+        </div>
+
         <button
           className={preferencesButtonClass}
           onClick={this.props.openPreferences}
@@ -218,9 +258,11 @@ Toolbar.propTypes = {
   startSketch: PropTypes.func.isRequired,
   startAccessibleSketch: PropTypes.func.isRequired,
   saveProject: PropTypes.func.isRequired,
+  onAPIKeyCommand: PropTypes.func.isRequired,
   currentUser: PropTypes.string,
   t: PropTypes.func.isRequired,
-  syncFileContent: PropTypes.func.isRequired
+  syncFileContent: PropTypes.func.isRequired,
+  apiKey: PropTypes.string.isRequired
 };
 
 Toolbar.defaultProps = {

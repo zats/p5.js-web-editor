@@ -107,6 +107,25 @@
   align-items: center;
 }
 
+.toolbar__ai-container {
+	margin-left: #{10 / $base-font-size}rem;
+	margin-top: #{10 / $base-font-size}rem;
+	margin-bottom: #{10 / $base-font-size}rem;
+	margin-right: #{10 / $base-font-size}rem;
+	padding-left: #{10 / $base-font-size}rem;
+	padding-right: #{10 / $base-font-size}rem;
+}
+  
+.toolbar__ai-input {
+	width: 100%;
+}
+
+.toolbar__api-key-container {
+	margin-left: #{10 / $base-font-size}rem;
+	padding-left: #{10 / $base-font-size}rem;
+}
+  
+
 .toolbar__project-name {
 	@include themify() {
 		color: getThemifyVariable('secondary-text-color');

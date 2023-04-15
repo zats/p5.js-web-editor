@@ -23,7 +23,8 @@ const initialState = {
   previousPath: '/',
   errorType: undefined,
   runtimeErrorWarningVisible: false,
-  parentId: undefined
+  parentId: undefined,
+  aiCommand: undefined
 };
 
 const ide = (state = initialState, action) => {
@@ -122,6 +123,8 @@ const ide = (state = initialState, action) => {
       });
     case ActionTypes.CLOSE_UPLOAD_FILE_MODAL:
       return Object.assign({}, state, { uploadFileModalVisible: false });
+    case ActionTypes.SET_PROJECT_NAME:
+      return Object.assign({}, state, { aiCommand: action.command });
     default:
       return state;
   }

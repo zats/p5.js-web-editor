@@ -11,7 +11,8 @@ const initialState = {
   theme: 'light',
   autorefresh: false,
   language: 'en-US',
-  autocloseBracketsQuotes: true
+  autocloseBracketsQuotes: true,
+  apiKey: localStorage.getItem('APIKey')
 };
 
 const preferences = (state = initialState, action) => {

@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
+import classNames from 'classnames';
 import { withRouter } from 'react-router';
 import { withTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet';
@@ -63,10 +64,15 @@ class IDEView extends React.Component {
   constructor(props) {
     super(props);
     this.handleGlobalKeydown = this.handleGlobalKeydown.bind(this);
+    this.handleAICommandKeyPress = this.handleAICommandKeyPress.bind(this);
+    this.handleAICommandChange = this.handleAICommandChange.bind(this);
+    this.handleAICommand = this.handleAICommand.bind(this);
+    this.onAPIKeyCommand = this.onAPIKeyCommand.bind(this);
 
     this.state = {
       consoleSize: props.ide.consoleIsExpanded ? 150 : 29,
-      sidebarSize: props.ide.sidebarIsExpanded ? 160 : 20
+      sidebarSize: props.ide.sidebarIsExpanded ? 160 : 20,
+      apiKey: localStorage.getItem('APIKey')
     };
   }
 
@@ -117,6 +123,8 @@ class IDEView extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
+    console.log(`🥕 componentDidUpdate`);
+    console.log(this.props.selectedFile.content);
     if (this.props.isUserOwner && this.props.project.id) {
       if (
         this.props.preferences.autosave &&
@@ -152,6 +160,34 @@ class IDEView extends React.Component {
     clearTimeout(this.autosaveInterval);
     this.autosaveInterval = null;
   }
+
+  onAPIKeyCommand(apiKey) {
+    console.log(`🥕 API Key: ${apiKey}`);
+    this.setState({ apiKey });
+  }
+
+  onAICommand(command, apiKey) {
+    const { id, content } = this.cmController.getContent();
+    console.log(`🥕 ${content} ${id} ${command} ${apiKey}`);
+    if (apiKey) {
+      this.props.sendAICommand(id, content, command, apiKey);
+    }
+  }
+
+  handleAICommand() {
+    this.onAICommand(this.state.aiCommand, this.state.apiKey);
+  }
+
+  handleAICommandChange(event) {
+    this.setState({ aiCommand: event.target.value });
+  }
+
+  handleAICommandKeyPress(event) {
+    if (event.key === 'Enter') {
+      this.aiCommandInput.blur();
+    }
+  }
+
   handleGlobalKeydown(e) {
     // 83 === s
     if (
@@ -249,6 +285,13 @@ class IDEView extends React.Component {
   };
 
   render() {
+    const aiContainerClass = classNames({
+      'toolbar__ai-container': true
+    });
+    const aiInputClass = classNames({
+      'toolbar__ai-input': true
+    });
+
     return (
       <RootPage>
         <Helmet>
@@ -261,6 +304,8 @@ class IDEView extends React.Component {
         />
         <Toolbar
           syncFileContent={this.syncFileContent}
+          apiKey={this.props.preferences.apiKey}
+          onAPIKeyCommand={this.onAPIKeyCommand}
           key={this.props.project.id}
         />
         {this.props.ide.preferencesIsVisible && (
@@ -293,6 +338,22 @@ class IDEView extends React.Component {
             />
           </Overlay>
         )}
+        <div>
+          <div className={aiContainerClass}>
+            <input
+              className={aiInputClass}
+              type="text"
+              value={this.state.aiCommand}
+              placeholder="Ask me anything"
+              onChange={this.handleAICommandChange}
+              ref={(element) => {
+                this.aiCommandInput = element;
+              }}
+              onBlur={this.handleAICommand}
+              onKeyPress={this.handleAICommandKeyPress}
+            />
+          </div>
+        </div>
         <main className="editor-preview-container">
           <SplitPane
             split="vertical"
@@ -506,6 +567,7 @@ IDEView.propTypes = {
   preferences: PropTypes.shape({
     autosave: PropTypes.bool.isRequired,
     fontSize: PropTypes.number.isRequired,
+    apiKey: PropTypes.string.isRequired,
     linewrap: PropTypes.bool.isRequired,
     lineNumbers: PropTypes.bool.isRequired,
     lintWarning: PropTypes.bool.isRequired,
@@ -574,7 +636,8 @@ IDEView.propTypes = {
   openUploadFileModal: PropTypes.func.isRequired,
   closeUploadFileModal: PropTypes.func.isRequired,
   t: PropTypes.func.isRequired,
-  isUserOwner: PropTypes.bool.isRequired
+  isUserOwner: PropTypes.bool.isRequired,
+  sendAICommand: PropTypes.func.isRequired
 };
 
 function mapStateToProps(state) {

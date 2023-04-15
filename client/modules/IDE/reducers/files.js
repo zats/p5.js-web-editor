@@ -177,7 +177,7 @@ const files = (state, action) => {
         if (file.id !== action.id) {
           return file;
         }
-
+        console.log(`UPDATING STATE of ${file} to ${action.content}`);
         return Object.assign({}, file, { content: action.content });
       });
     case ActionTypes.SET_BLOB_URL:

@@ -3,9 +3,10 @@ import objectID from 'bson-objectid';
 import each from 'async/each';
 import isEqual from 'lodash/isEqual';
 import apiClient from '../../../utils/apiClient';
+import openAIClient from '../../../utils/openAIClient';
 import getConfig from '../../../utils/getConfig';
 import * as ActionTypes from '../../../constants';
-import { showToast, setToastText } from './toast';
+import { showToast, setToastText, hideToast } from './toast';
 import {
   setUnsavedChanges,
   justOpenedProject,
@@ -13,6 +14,7 @@ import {
   showErrorModal,
   setPreviousPath
 } from './ide';
+import { updateFileContent } from './files';
 import { clearState, saveState } from '../../../persistState';
 
 const ROOT_URL = getConfig('API_URL');
@@ -395,6 +397,70 @@ export function changeProjectName(id, newName) {
           type: ActionTypes.PROJECT_SAVE_FAIL,
           error: response.data
         });
+      });
+  };
+}
+
+export function sendAICommand(fileId, content, command, apiKey) {
+  return (dispatch, getState) => {
+    console.log(`🥕 requesting AI for ${command}`);
+    if (!command || !content) {
+      return Promise.reject();
+    }
+
+    dispatch(showToast(60000));
+    dispatch(setToastText('Thinking…'));
+
+    return openAIClient
+      .post(
+        'v1/chat/completions',
+        {
+          messages: [
+            {
+              role: 'system',
+              content:
+                // eslint-disable-next-line max-len
+                'You are a p5js IDE assistant. There can be 2 types of questions: modify code or explain code. Return JSON containing two fields: type of response (code, explanation or unknown) and contents. Do not return explanation text.'
+            },
+            {
+              role: 'user',
+              content: `The latest code is\n\n${content}\n\n${command}\nOnly return JSON`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1200,
+          top_p: 1,
+          frequency_penalty: 0,
+          presence_penalty: 0,
+          model: 'gpt-3.5-turbo',
+          stream: false
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`
+          }
+        }
+      )
+      .then((response) => {
+        dispatch(hideToast());
+        const json = response.data.choices[0].message.content;
+        const results = JSON.parse(json);
+        switch (results.type) {
+          case 'code':
+            console.log(
+              `🥕 new content for ${fileId}: \n\n${results.contents}`
+            );
+            dispatch(setUnsavedChanges(true));
+            dispatch(updateFileContent(fileId, results.contents));
+            break;
+          default:
+            // no-op
+            break;
+        }
+      })
+      .catch((error) => {
+        dispatch(showToast(2000));
+        dispatch(setToastText(`Failed to get suggestions, sorry!`));
       });
   };
 }
